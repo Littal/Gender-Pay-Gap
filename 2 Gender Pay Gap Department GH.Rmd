@@ -1,0 +1,105 @@
+---
+title: "Gender Pay Gap by Departments"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+runtime: shiny
+---
+
+
+```{r setup, include=FALSE}
+
+rm(list=ls())
+#setwd("~/...")
+
+library(flexdashboard)
+library(tidyverse)
+library(shiny)
+library(lubridate)
+
+# This R code was used for the article: 
+# https://www.littalics.com/gender-pay-gap-and-people-analytics-a-practice-with-open-data/
+# Data were anonymized, Annual salary data were randomized (multipled by random number between 0.98-1.02)
+# The objective is creating a dashboard for departments, similar to the display in the article
+
+# Loading and munging #####
+
+Employees <- read_csv("https://raw.githubusercontent.com/Littal/Gender-Pay-Gap/main/2%20Gender%20Pay%20Gap%20GH.csv")
+
+Employees <- Employees %>%
+  mutate(Gender=as.factor(Gender)) %>%
+  mutate(Department=as.factor(Department)) %>%
+  mutate(Assignment=as.factor(Assignment))  %>%
+  mutate(Date.Hired=mdy(Date.Hired)) %>%
+  mutate(Tenure.Years=((mdy("12/31/2017")-Date.Hired)/365)) %>%
+  mutate(Tenure = as.factor(case_when(
+    Tenure.Years >= 15 ~ "15-20+",
+    Tenure.Years >= 10 & Tenure.Years < 15 ~ "10-15",
+    Tenure.Years >= 5 & Tenure.Years < 10 ~ "5-10",
+    Tenure.Years <5 ~ "0-5"))) %>%
+    mutate(Tenure = factor(Tenure, levels = c("0-5", "5-10", "10-15", "15-20+")))
+
+```
+
+
+
+
+Input{.sidebar}
+----------------------------------------------------------------
+### Departments
+
+```{r}
+
+dat_in <- Employees %>% 
+  group_by(Department) %>%
+  summarise(mean=mean(Annual.Salary))
+  
+
+selectInput(inputId="my_department",label="Select/deselect department(s)",choices=dat_in$Department, multiple = TRUE, 
+            selected = c("BOE", "CAT", "CCL", "CEC", "CEX", "COR", "CUS", "DEP", "DGS", 
+                         "DHS", "DLC", "DOT", "DPS", "DTS", "FIN", "FRS", "HCA", "HHS", 
+                         "LIB", "NDA", "OCP", "OHR", "OLO", 
+                         "OMB", "PIO", "POL", "PRO", "REC", "SHF")
+)
+
+
+
+```
+
+Please make sure you selected at least one department. Otherwise you'll receive an error message.
+The default selected departments have more than 10 employees.
+The box plots and histograms referenced to the genders will be displayed according to your selected department(s). However the normal curves remain referenced to the entire organization. 
+
+Column
+----------------------------------------------------------------
+
+```{r}
+
+renderPlot({
+
+dat_out <- Employees %>%
+  filter(Department%in%input$my_department)
+  
+par(mfrow = c(2, 2))
+hist(dat_out$Annual.Salary[dat_out$Gender=="F"], 
+     col="orange", xlim=c(0,300000), breaks = 50, freq = FALSE, xlab = NULL, main = "Current Annual Salary - Women")
+curve(dnorm (x, mean = mean(Employees$Annual.Salary), 
+             sd = sd(Employees$Annual.Salary)), add = TRUE)
+boxplot(dat_out$Annual.Salary[dat_out$Gender=="F"], 
+        horizontal = TRUE, col="orange", ylim = c(0,300000))
+hist(dat_out$Annual.Salary[dat_out$Gender=="M"], 
+     col="lightblue", xlim=c(0,300000), breaks = 50, freq = FALSE, xlab = NULL, main = "Current Annual Salary - Men")
+curve(dnorm (x, mean = mean(Employees$Annual.Salary), 
+             sd = sd(Employees$Annual.Salary)), add = TRUE)
+boxplot(dat_out$Annual.Salary[dat_out$Gender=="M"], 
+        horizontal = TRUE, col="lightblue", ylim = c(0,300000))
+
+})
+
+```
+
+
+
+
+

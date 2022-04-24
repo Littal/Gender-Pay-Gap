@@ -1,4 +1,4 @@
-# Gender-Pay-Gap-
+# Gender-Pay-Gap
 R code used in the articles: 
 
 (1) [Gender Pay Gap And People Analytics: A Practice With Open Data](https://www.littalics.com/gender-pay-gap-and-people-analytics-a-practice-with-open-data/) by Littal Shemer Haim, January 2019

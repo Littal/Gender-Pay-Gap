@@ -9,4 +9,4 @@ The gender pay gap analysis in this article is straightforward. HR managers with
 (2) [Finding Hidden Patterns In Gender Pay Gap Data](https://www.littalics.com/finding-hidden-patterns-in-gender-pay-gap-data/) by Littal Shemer Haim, April 2022
 
 (Quoted from the article)\
-TExploring gender pay averages across tenure ranges reveals that while both genders start at a similar earning level and are promoted while gaining tenure, men are promoted at higher rates, as the different slope indicates. In addition, a statistical procedure called ANOVA analysis of variance (that you may recall from your fundamental statistics learning) reveals that the interaction between gender and tenure variables is significant, meaning that the slopes are not random.
+Exploring gender pay averages across tenure ranges reveals that while both genders start at a similar earning level and are promoted while gaining tenure, men are promoted at higher rates, as the different slope indicates. In addition, ANOVA reveals that the interaction between gender and tenure variables is significant.

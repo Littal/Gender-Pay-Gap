@@ -10,3 +10,8 @@ The gender pay gap analysis in this article is straightforward. HR managers with
 
 (Quoted from the article)\
 Exploring gender pay averages across tenure ranges reveals that while both genders start at a similar earning level and are promoted while gaining tenure, men are promoted at higher rates, as the different slope indicates. In addition, ANOVA reveals that the interaction between gender and tenure variables is significant.
+
+(3) [Gender Pay Gap: More Hidden Patterns](https://www.littalics.com/gender-pay-gap-more-hidden-patterns/) by Littal Shemer Haim, August 2022
+
+(Quoted from the article)\
+gender is not the only predictor interacting with tenure. It is also interacting with assignments, full-time and part-time. As they gain tenure, the accumulative gap between men and women throughout their careers may stem from their full- and part-time positions. An intervention to close the pay gap should take into account these insights.

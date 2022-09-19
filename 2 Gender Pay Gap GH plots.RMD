@@ -1,0 +1,148 @@
+---
+title: "2 Gender Pay Gap GH"
+author: "Littal"
+date: "4/6/2022"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(fig.align = 'left', echo = TRUE)
+```
+
+```{r data-all, include = FALSE}
+
+rm(list=ls())
+setwd("~/2 Data Science Courses/R + DSc/Littalics-open-data-demo")
+
+library(tidyverse)
+library(lubridate)
+library(summarytools)
+library(broom)
+library(gridExtra)
+
+# Loading and munging #####
+
+Employees <- read_csv("https://raw.githubusercontent.com/Littal/Gender-Pay-Gap/main/2%20Gender%20Pay%20Gap%20GH.csv")
+
+Employees <- Employees %>%
+  mutate(Gender=as.factor(Gender)) %>%
+  mutate(Department=as.factor(Department)) %>%
+  mutate(Assignment=as.factor(Assignment))  %>%
+  mutate(Date.Hired=mdy(Date.Hired)) %>%
+  mutate(Tenure.Years=((mdy("12/31/2017")-Date.Hired)/365)) %>%
+  mutate(Tenure = as.factor(case_when(
+    Tenure.Years >= 15 ~ "15-20+",
+    Tenure.Years >= 10 & Tenure.Years < 15 ~ "10-15",
+    Tenure.Years >= 5 & Tenure.Years < 10 ~ "5-10",
+    Tenure.Years <5 ~ "0-5"))) %>%
+    mutate(Tenure = factor(Tenure, levels = c("0-5", "5-10", "10-15", "15-20+")))
+```
+
+```{r gender-all, echo=FALSE, warning=FALSE, message=FALSE}
+
+par(mfrow = c(2, 2))
+hist(Employees$Annual.Salary[Employees$Gender=="F"], 
+     col="orange", xlim=c(0,300000), breaks = 50, freq = FALSE, xlab = NULL, main = "Current Annual Salary - Women, Avg 73K")
+curve(dnorm (x, mean = mean(Employees$Annual.Salary), 
+             sd = sd(Employees$Annual.Salary)), add = TRUE)
+boxplot(Employees$Annual.Salary[Employees$Gender=="F"], 
+        horizontal = TRUE, col="orange", ylim = c(0,300000))
+hist(Employees$Annual.Salary[Employees$Gender=="M"], 
+     col="lightblue", xlim=c(0,300000), breaks = 50, freq = FALSE, xlab = NULL, main = "Current Annual Salary - Men, Avg 77K")
+curve(dnorm (x, mean = mean(Employees$Annual.Salary), 
+             sd = sd(Employees$Annual.Salary)), add = TRUE)
+boxplot(Employees$Annual.Salary[Employees$Gender=="M"], 
+        horizontal = TRUE, col="lightblue", ylim = c(0,300000))
+
+```
+
+```{r data-diverse, include = FALSE}
+
+DiversePositions <- Employees %>%
+  group_by(Position.Title) %>%
+  summarize(Male=sum(Gender=="M"), Female=sum(Gender=="F")) %>%
+  filter(Male>0 & Female>0) %>%
+  select(Position.Title) %>%
+  pull(Position.Title)
+
+EmployeesDiverse <- Employees %>%
+  mutate(Diverse = ifelse(Position.Title %in% DiversePositions, 1, 0)) %>%
+  filter(Diverse == 1)
+
+```
+
+```{r gender-diverse, echo=FALSE, warning=FALSE, message=FALSE}
+
+par(mfrow = c(2, 2))
+hist(EmployeesDiverse$Annual.Salary[EmployeesDiverse$Gender=="F"], 
+     col="orange", xlim=c(0,300000), breaks = 50, freq = FALSE, xlab = NULL, main = "Current Annual Salary - Women, Avg 72K")
+curve(dnorm (x, mean = mean(EmployeesDiverse$Annual.Salary), 
+             sd = sd(EmployeesDiverse$Annual.Salary)), add = TRUE)
+boxplot(EmployeesDiverse$Annual.Salary[EmployeesDiverse$Gender=="F"], 
+        horizontal = TRUE, col="orange", ylim = c(0,300000))
+hist(EmployeesDiverse$Annual.Salary[EmployeesDiverse$Gender=="M"], 
+     col="lightblue", xlim=c(0,300000), breaks = 50, freq = FALSE, xlab = NULL, main = "Current Annual Salary - Men, Avg 78K")
+curve(dnorm (x, mean = mean(EmployeesDiverse$Annual.Salary), 
+             sd = sd(EmployeesDiverse$Annual.Salary)), add = TRUE)
+boxplot(EmployeesDiverse$Annual.Salary[EmployeesDiverse$Gender=="M"], 
+        horizontal = TRUE, col="lightblue", ylim = c(0,300000))
+
+```
+
+```{r gender-tenure-all, echo=FALSE, warning=FALSE, message=FALSE}
+
+interaction2 <- aggregate(Employees$Annual.Salary, 
+                          by=list(Employees$Gender, Employees$Tenure), 
+                          FUN=mean, na.rm=TRUE)
+colnames(interaction2) <-c("Gender", "Tenure", "Salary")
+
+interaction2plot <- ggplot(data=interaction2, mapping=aes(x=Tenure, y=Salary, color=Gender)) +
+  geom_point(size = 5) + geom_line(aes(group = Gender), size=1) +
+  scale_y_continuous(name="Annual Salary", limits=c(30000,100000), labels = scales::comma) +
+  scale_color_manual(values=c("orange", "skyblue")) + theme_bw()
+interaction2plot
+
+```
+
+```{r gender-tenure-diverse, echo=FALSE, warning=FALSE, message=FALSE}
+
+interaction2diverse <- aggregate(EmployeesDiverse$Annual.Salary, 
+                          by=list(EmployeesDiverse$Gender, EmployeesDiverse$Tenure), 
+                          FUN=mean, na.rm=TRUE)
+colnames(interaction2diverse) <-c("Gender", "Tenure", "Salary")
+
+interaction2plotdiverse <- ggplot(data=interaction2diverse, mapping=aes(x=Tenure, y=Salary, color=Gender)) +
+  geom_point(size = 5) + geom_line(aes(group = Gender), size=1) +
+  scale_y_continuous(name="Annual Salary", limits=c(30000,100000), labels = scales::comma) +
+  scale_color_manual(values=c("orange", "skyblue")) + theme_bw()
+interaction2plotdiverse
+
+```
+
+```{r gender-tenure-diverse-linear, echo=FALSE, warning=FALSE, message=FALSE}
+reg2plotdiverse <- EmployeesDiverse %>%
+  ggplot(aes(Tenure.Years, Annual.Salary, color=Gender)) + 
+  geom_point(alpha = 0.5) + 
+  geom_smooth(method = lm, se = FALSE, aes(colour=Gender), size=1.75) + 
+  ylim(0,200000) +
+  scale_color_manual(values=c("orange", "skyblue")) + theme_bw()
+reg2plotdiverse
+```
+
+```{r gender-tenure-diverse-linear-assignment, echo=FALSE, warning=FALSE, message=FALSE}
+reg2Aplotdiverse <- EmployeesDiverse %>%
+  ggplot(aes(Tenure.Years, Annual.Salary, color=Gender, size=Assignment)) +  #Part-time dots enlarged
+  geom_point(alpha = 0.3) + 
+  geom_smooth(method = lm, se = FALSE, aes(colour=Gender), size=1.75) + 
+  ylim(0,200000) +
+  scale_color_manual(values=c("orange", "skyblue")) + theme_bw()
+reg2Aplotdiverse
+
+reg2Bplotdiverse <- EmployeesDiverse %>%
+  ggplot(aes(Tenure.Years, Annual.Salary, color=Gender, size=Assignment)) + 
+  geom_point(alpha = 0.3) + 
+  geom_smooth(method = lm, se = FALSE, aes(colour=Gender, linetype=Assignment), size=1.75) + #Part-time line separated
+  ylim(0,200000) +
+  scale_color_manual(values=c("orange", "skyblue")) + theme_bw()
+reg2Bplotdiverse
+```
